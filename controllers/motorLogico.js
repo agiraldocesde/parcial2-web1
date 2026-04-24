@@ -63,3 +63,100 @@ function ordenarAlertasPorPrioridad(arrAlertas) {
     
     return copia;
 }
+
+
+
+
+function motorLogico() {
+    console.clear();
+    console.log('='.repeat(60));
+    console.log('       MOTOR LÓGICO ECOVIGÍA - SISTEMA DE DESPACHO');
+    console.log('='.repeat(60));
+
+    
+    let dronesDisponibles = [];
+    let dronesMantenimiento = [];
+
+    for (let i = 0; i < flota.length; i++) {
+        let dron = flota[i];
+        
+        if (dron.estado === 'en base' && dron.bateria > 20) {
+            dronesDisponibles[dronesDisponibles.length] = dron;
+        }
+        
+        // ¿Necesita mantenimiento?
+        if (dron.bateria <= 20) {
+            dronesMantenimiento[dronesMantenimiento.length] = dron;
+        }
+    }
+
+    console.log('[INFO] Drones disponibles: ' + dronesDisponibles.length);
+    console.log('[INFO] Drones con batería crítica: ' + dronesMantenimiento.length);
+
+
+    let alertasOrdenadas = ordenarAlertasPorPrioridad(alertas);
+
+    let asignaciones = [];
+    let alertasNoAtendidas = [];
+
+    for (let i = 0; i < alertasOrdenadas.length; i++) {
+        let alerta = alertasOrdenadas[i];
+        let aguaFaltante = alerta.aguaRequerida;
+        let dronesAsignados = [];
+
+        console.log('\n[PROCESANDO] ' + alerta.sector + ' (' + alerta.severidad + ') - Necesita: ' + alerta.aguaRequerida + 'L');
+
+        let j = 0;
+        while (j < dronesDisponibles.length && aguaFaltante > 0) {
+            let dron = dronesDisponibles[j];
+
+            if (dron.agua > 0) {
+                dronesAsignados[dronesAsignados.length] = dron.id;
+                aguaFaltante = aguaFaltante - dron.agua;
+
+                console.log('  -> Asignado: ' + dron.id + ' (' + dron.agua + 'L) | Faltante: ' + (aguaFaltante > 0 ? aguaFaltante : 0) + 'L');
+
+                // Eliminar dron del array de disponibles
+                for (let k = j; k < dronesDisponibles.length - 1; k++) {
+                    dronesDisponibles[k] = dronesDisponibles[k + 1];
+                }
+                dronesDisponibles.length = dronesDisponibles.length - 1;
+
+                if (aguaFaltante <= 0) {
+                    break;
+                }
+            } else {
+                for (let k = j; k < dronesDisponibles.length - 1; k++) {
+                    dronesDisponibles[k] = dronesDisponibles[k + 1];
+                }
+                dronesDisponibles.length = dronesDisponibles.length - 1;
+            }
+        }
+
+        if (dronesAsignados.length > 0) {
+            let aguaDesplegada = alerta.aguaRequerida - (aguaFaltante > 0 ? aguaFaltante : 0);
+            let registro = {
+                sector: alerta.sector,
+                severidad: alerta.severidad,
+                drones: dronesAsignados,
+                aguaDesplegada: aguaDesplegada
+            };
+
+            if (aguaFaltante > 0) {
+                registro.estado = 'PARCIAL';
+            } else {
+                registro.estado = 'COMPLETO';
+            }
+
+            asignaciones[asignaciones.length] = registro;
+        }
+
+        if (aguaFaltante > 0) {
+            alertasNoAtendidas[alertasNoAtendidas.length] = {
+                sector: alerta.sector,
+                severidad: alerta.severidad,
+                aguaRequerida: alerta.aguaRequerida,
+                aguaFaltante: aguaFaltante
+            };
+        }
+    }
