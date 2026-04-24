@@ -160,3 +160,19 @@ function motorLogico() {
             };
         }
     }
+
+        // --- PARTE C: MOSTRAR REPORTES FINALES ---
+
+    console.log('\n' + '='.repeat(60));
+    console.log('            REPORTE FINAL DE DESPACHO');
+    console.log('='.repeat(60));
+
+    mostrarTabla(asignaciones, 'ASIGNACIONES DE DRONES A INCENDIOS');
+    mostrarTabla(alertasNoAtendidas, 'ALERTAS NO ATENDIDAS (O PARCIALES)');
+    mostrarTabla(dronesMantenimiento, 'DRONES EN ALERTA DE MANTENIMIENTO (Batería ≤ 20%)');
+
+    console.log('='.repeat(60));
+    console.log('            FIN DEL REPORTE');
+    console.log('='.repeat(60));
+}
+motorLogico();
